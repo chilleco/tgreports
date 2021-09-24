@@ -18,7 +18,7 @@ TYPES = [
     'IMPORTANT', 'REQUEST',
 ]
 
-logging.config.fileConfig('tgreports/log.conf')
+
 logger_err = logging.getLogger(__name__)
 logger_log = logging.getLogger('info')
 
@@ -26,10 +26,12 @@ logger_log = logging.getLogger('info')
 class Report():
     """ Report logs and notifications on Telegram chat or in log files """
 
-    def __init__(self, mode, token, bug_chat):
+    def __init__(self, mode, token, bug_chat, log_file='log.conf'):
         self.mode = mode
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
+
+        logging.config.fileConfig(log_file)
 
     async def _report(self, text, type_=0, extra=None, tags=None):
         """ Make report message and send """

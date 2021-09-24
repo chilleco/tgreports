@@ -36,7 +36,6 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
-        'Framework :: TG.io',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
         'License :: OSI Approved :: MIT License',
