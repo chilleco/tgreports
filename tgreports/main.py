@@ -27,12 +27,19 @@ logger_log = logging.getLogger('info')
 
 
 def to_json(data):
+    """ Convert any type to json serializable object """
+
+    if isinstance(data, str):
+        return data
+
     try:
         return json.dumps(data)
     except TypeError:
         return str(data)
 
 def dump(data):
+    """ json.dumps() with errors handler """
+
     if data is None:
         return None
 
@@ -79,6 +86,7 @@ class Report():
                f"\n\n{text}"
 
         if extra:
+            print('###', extra)
             if isinstance(extra, dict):
                 extra_text = "\n".join(
                     f"{k} = {v}"

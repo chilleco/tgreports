@@ -15,6 +15,7 @@ async def test_all():
     await report.request("test")
 
     # Extra data
+    await report.request("test", "extra")
     # NOTE: Not {}, [] in dict
     try:
         print(1/0)
@@ -24,6 +25,7 @@ async def test_all():
             'hinkali': None,
             'hacapuri': {'1', 2, None, 4.5, 6., (7, 8), (9), (10,)},
             'ramen': e,
+            'bento': 'udon',
         })
 
     # Tags
