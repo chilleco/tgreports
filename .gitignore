@@ -1,0 +1,29 @@
+# Cache
+## Project
+build/
+dist/
+*.egg-info
+
+## MacOS
+.DS_Store
+
+## Editors
+.idea/
+.vscode/
+
+## Python
+__pycache__/
+*.pyc
+
+# Keys & sets
+keys*
+.env*
+
+# Data
+
+# Libraries
+
+# Environments
+env/
+
+# Copyright
