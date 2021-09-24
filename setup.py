@@ -48,6 +48,9 @@ setup(
     install_requires=[
         'tgio',
     ],
+    package_data={
+        'tgreports': ['log.conf'],
+    },
     project_urls={
         'Source': 'https://github.com/kosyachniy/tgreports',
     },

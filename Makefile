@@ -38,7 +38,7 @@ test-unit-all:
 
 test-unit:
 	git status -s \
-	| grep '\.py$$' \
+	| grep 'tests/.*\.py$$' \
 	| awk '{print $$1,$$2}' \
 	| grep -i '^[ma]' \
 	| awk '{print $$2}' \
