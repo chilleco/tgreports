@@ -20,6 +20,8 @@ keys*
 .env*
 
 # Data
+*.log
+*.err
 
 # Libraries
 

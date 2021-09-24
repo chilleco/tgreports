@@ -6,6 +6,7 @@ import json
 import inspect
 import traceback
 import logging
+import logging.config
 
 from tgio import Telegram
 
@@ -17,7 +18,7 @@ TYPES = [
     'IMPORTANT', 'REQUEST',
 ]
 
-
+logging.config.fileConfig('tgreports/log.conf')
 logger_err = logging.getLogger(__name__)
 logger_log = logging.getLogger('info')
 
