@@ -13,3 +13,21 @@ async def test_all():
     await report.critical("test")
     await report.important("test")
     await report.request("test")
+
+    # Extra data
+    # NOTE: Not {}, [] in dict
+    try:
+        print(1/0)
+    except Exception as e:
+        await report.request("test", {
+            'onigiri': 1,
+            'hinkali': None,
+            'hacapuri': {'1', 2, None, 4.5, 6., (7, 8), (9), (10,)},
+            'ramen': e,
+        })
+
+    # Tags
+    await report.request("Tag", tags=['new', 'tag'])
+
+    # Special symbols
+    await report.request("'\"_1")

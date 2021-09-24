@@ -26,6 +26,26 @@ logger_err = logging.getLogger(__name__)
 logger_log = logging.getLogger('info')
 
 
+def to_json(data):
+    try:
+        return json.dumps(data)
+    except TypeError:
+        return str(data)
+
+def dump(data):
+    if data is None:
+        return None
+
+    if not isinstance(data, dict):
+        return str(data)
+
+    return {
+        k: to_json(v)
+        for k, v in data.items()
+        if v is not None
+    }
+
+
 class Report():
     """ Report logs and notifications on Telegram chat or in log files """
 
@@ -61,9 +81,8 @@ class Report():
         if extra:
             if isinstance(extra, dict):
                 extra_text = "\n".join(
-                    f"{i} = {extra[i]}"
-                    for i in extra
-                    if extra[i] is not None
+                    f"{k} = {v}"
+                    for k, v in extra.items()
                 )
             else:
                 extra_text = str(extra)
@@ -113,13 +132,14 @@ class Report():
         Sequence of function calls, internal values
         """
 
-        logger_log.debug("%s  %s  %s", SYMBOLS[0], text, json.dumps(extra))
+        logger_log.debug("%s  %s  %s", SYMBOLS[0], text, dump(extra))
 
     async def info(self, text, extra=None, tags=None):
         """ Info
         System logs and event journal
         """
 
+        extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[1], text, json.dumps(extra))
         await self._report(text, 1, extra, tags)
 
@@ -128,6 +148,7 @@ class Report():
         Unexpected / strange code behavior that does not entail consequences
         """
 
+        extra = dump(extra)
         logger_err.warning("%s  %s  %s", SYMBOLS[2], text, json.dumps(extra))
         await self._report(text, 2, extra, tags)
 
@@ -136,6 +157,7 @@ class Report():
         An unhandled error occurred
         """
 
+        extra = dump(extra)
         content = (
             "".join(
                 traceback.format_exception(None, error, error.__traceback__)
@@ -152,6 +174,7 @@ class Report():
         An error occurred that affects the operation of the service
         """
 
+        extra = dump(extra)
         content = (
             "".join(
                 traceback.format_exception(None, error, error.__traceback__)
@@ -168,6 +191,7 @@ class Report():
         Trigger on tracked user action was fired
         """
 
+        extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[5], text, json.dumps(extra))
         await self._report(text, 5, extra, tags)
 
@@ -176,5 +200,6 @@ class Report():
         The user made a request, the intervention of administrators is necessary
         """
 
+        extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[6], text, json.dumps(extra))
         await self._report(text, 6, extra, tags)
