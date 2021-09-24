@@ -7,6 +7,8 @@ import inspect
 import traceback
 import logging
 
+from tgio import Telegram
+
 
 SYMBOLS = ['💬', '🟢', '🟡', '🔴', '❗️', '✅', '🛎']
 TYPES = [
@@ -23,9 +25,9 @@ logger_log = logging.getLogger('info')
 class Report():
     """ Report logs and notifications on Telegram chat or in log files """
 
-    def __init__(self, mode, tg, bug_chat):
+    def __init__(self, mode, token, bug_chat):
         self.mode = mode
-        self.tg = tg
+        self.tg = Telegram(token)
         self.bug_chat = bug_chat
 
     async def _report(self, text, type_=0, extra=None, tags=None):
@@ -76,29 +78,33 @@ class Report():
         try:
             await self.tg.send(self.bug_chat, text_with_extra, markup=None)
 
-        except Exception:
+        # pylint: disable=broad-except
+        except Exception as e:
             if extra:
                 logger_err.error(
-                    "%s  Send report  %s",
-                    SYMBOLS[3], extra,
+                    "%s  Send report  %s %s",
+                    SYMBOLS[3], extra, e,
                 )
 
                 try:
                     await self.tg.send(self.bug_chat, text, markup=None)
-                except Exception:
+
+                # pylint: disable=broad-except
+                except Exception as e:
                     logger_err.error(
-                        "%s  Send report  %s %s",
-                        SYMBOLS[3], type_, text,
+                        "%s  Send report  %s %s %s",
+                        SYMBOLS[3], type_, text, e,
                     )
 
             else:
                 logger_err.error(
-                    "%s  Send report  %s %s",
-                    SYMBOLS[3], type_, text,
+                    "%s  Send report  %s %s %s",
+                    SYMBOLS[3], type_, text, e,
                 )
 
 
-    async def debug(self, text, extra=None):
+    @staticmethod
+    async def debug(text, extra=None):
         """ Debug
         Sequence of function calls, internal values
         """

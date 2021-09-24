@@ -30,11 +30,11 @@ test-linter:
 	| grep -i '^[ma]' \
 	| awk '{print $$2}' \
 	| xargs $(PYTHON) -m pylint -f text \
-		--rcfile=../tests/.pylintrc \
+		--rcfile=tests/.pylintrc \
 		--msg-template='{path}:{line}:{column}: [{symbol}] {msg}'
 
 test-unit-all:
-	$(PYTHON) -m pytest tests/
+	$(PYTHON) -m pytest -s tests/
 
 test-unit:
 	git status -s \
@@ -42,7 +42,7 @@ test-unit:
 	| awk '{print $$1,$$2}' \
 	| grep -i '^[ma]' \
 	| awk '{print $$2}' \
-	| xargs $(PYTHON) -m pytest
+	| xargs $(PYTHON) -m pytest -s
 
 release:
 	$(PYTHON) setup.py sdist bdist_wheel

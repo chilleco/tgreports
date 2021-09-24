@@ -7,7 +7,7 @@ import re
 from setuptools import setup, find_packages
 
 
-with open('README.md', 'r') as file:
+with open('README.md', 'r', encoding='utf-8') as file:
     long_description = file.read()
 
 WORK_DIR = pathlib.Path(__file__).parent
@@ -44,7 +44,7 @@ setup(
         'Operating System :: OS Independent',
     ],
     keywords='reports, logs, logging, notifications, alerts, Telegram',
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests',)),
     python_requires='>=3.7, <4',
     install_requires=[
         'tgio',
