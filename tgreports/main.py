@@ -33,7 +33,7 @@ class Report():
     async def _report(self, text, type_=0, extra=None, tags=None):
         """ Make report message and send """
 
-        if self.mode != 'PROD' and type_ == 0:
+        if self.mode not in ('PRE', 'PROD') and type_ == 0:
             return
 
         if not tags:
