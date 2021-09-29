@@ -61,10 +61,10 @@ class Report():
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
 
-    async def _report(self, text, type_=0, extra=None, tags=None):
+    async def _report(self, text, type_=1, extra=None, tags=None):
         """ Make report message and send """
 
-        if self.mode not in ('PRE', 'PROD') and type_ == 0:
+        if self.mode not in ('PRE', 'PROD') and type_ == 1:
             return
 
         if not tags:
@@ -86,7 +86,6 @@ class Report():
                f"\n\n{text}"
 
         if extra:
-            print('###', extra)
             if isinstance(extra, dict):
                 extra_text = "\n".join(
                     f"{k} = {v}"
