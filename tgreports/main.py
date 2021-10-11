@@ -61,6 +61,7 @@ class Report():
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
 
+    # pylint: disable=too-many-branches
     async def _report(self, text, type_=1, extra=None, tags=None):
         """ Make report message and send """
 
@@ -71,18 +72,22 @@ class Report():
             tags = []
 
         previous = inspect.stack()[2]
-        path = previous.filename.replace('/', '.').split('.')[2:-1]
+        path = previous.filename.replace('/', '.').split('.')[3:-1]
 
-        if path[0] == 'api':
-            path = path[1:]
+        if path:
+            if path[0] == 'api':
+                path = path[1:]
 
-        if previous.function != 'handle':
-            path.append(previous.function)
+            if previous.function != 'handle':
+                path.append(previous.function)
 
-        path = '.'.join(path)
+            path = '\n' + '.'.join(path)
+
+        else:
+            path = ''
 
         text = f"{SYMBOLS[type_]} {self.mode} {TYPES[type_]}" \
-               f"\n{path}" \
+               f"{path}" \
                f"\n\n{text}"
 
         if extra:
@@ -99,8 +104,16 @@ class Report():
             text_with_extra = text
 
         tags = [self.mode.lower()] + tags
-        outro = f"\n\n{previous.filename}:{previous.lineno}" \
-                f"\n#" + " #".join(tags)
+
+        if previous.filename[:3] == '/./':
+            filename = previous.filename[3:]
+        else:
+            filename = previous.filename
+
+        outro = (
+            f"\n\n{filename}:{previous.lineno}"
+            f"\n#" + " #".join(tags)
+        )
 
         text += outro
         text_with_extra += outro
