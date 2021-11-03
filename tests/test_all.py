@@ -3,8 +3,8 @@ import pytest
 from . import report
 
 
-async def nested():
-    await report.critical("test nested", depth=3)
+def nested():
+    print(1/0)
 
 
 @pytest.mark.asyncio
@@ -39,4 +39,7 @@ async def test_all():
     await report.request("'\"_1")
 
     # Change traceback
-    await nested()
+    try:
+        nested()
+    except Exception as e:
+        await report.critical("test", error=e)

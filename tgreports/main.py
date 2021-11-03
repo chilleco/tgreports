@@ -62,7 +62,9 @@ class Report():
         self.bug_chat = bug_chat
 
     # pylint: disable=too-many-branches
-    async def _report(self, text, type_=1, extra=None, tags=None, depth=None):
+    async def _report(
+        self, text, type_=1, extra=None, tags=None, error=None,
+    ):
         """ Make report message and send """
 
         if self.mode not in ('PRE', 'PROD') and type_ == 1:
@@ -71,18 +73,36 @@ class Report():
         if not tags:
             tags = []
 
-        if depth is None:
-            depth = 2
+        if error:
+            traces = traceback.extract_tb(error.__traceback__)[::-1]
 
-        previous = inspect.stack()[depth]
-        path = previous.filename.replace('/', '.').split('.')[3:-1]
+            for trace in traces:
+                if 'python' not in trace.filename:
+                    break
+            else:
+                trace = traces[0]
+
+            filename = trace.filename
+            lineno = trace.lineno
+            function = trace.name
+
+        else:
+            previous = inspect.stack()[2]
+            filename = previous.filename
+            lineno = previous.lineno
+            function = previous.function
+
+        if filename[:3] == '/./':
+            filename = filename[3:]
+
+        path = filename.replace('/', '.').split('.')[:-1]
 
         if path:
             if path[0] == 'api':
                 path = path[1:]
 
-            if previous.function != 'handle':
-                path.append(previous.function)
+            if function and function != 'handle':
+                path.append(function)
 
             path = '\n' + '.'.join(path)
 
@@ -108,13 +128,8 @@ class Report():
 
         tags = [self.mode.lower()] + tags
 
-        if previous.filename[:3] == '/./':
-            filename = previous.filename[3:]
-        else:
-            filename = previous.filename
-
         outro = (
-            f"\n\n{filename}:{previous.lineno}"
+            f"\n\n{filename}:{lineno}"
             f"\n#" + " #".join(tags)
         )
 
@@ -150,32 +165,32 @@ class Report():
 
 
     @staticmethod
-    async def debug(text, extra=None, depth=None):
+    async def debug(text, extra=None):
         """ Debug
         Sequence of function calls, internal values
         """
 
         logger_log.debug("%s  %s  %s", SYMBOLS[0], text, dump(extra))
 
-    async def info(self, text, extra=None, tags=None, depth=None):
+    async def info(self, text, extra=None, tags=None):
         """ Info
         System logs and event journal
         """
 
         extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[1], text, json.dumps(extra))
-        await self._report(text, 1, extra, tags, depth)
+        await self._report(text, 1, extra, tags)
 
-    async def warning(self, text, extra=None, tags=None, depth=None):
+    async def warning(self, text, extra=None, tags=None, error=None):
         """ Warning
         Unexpected / strange code behavior that does not entail consequences
         """
 
         extra = dump(extra)
         logger_err.warning("%s  %s  %s", SYMBOLS[2], text, json.dumps(extra))
-        await self._report(text, 2, extra, tags, depth)
+        await self._report(text, 2, extra, tags, error)
 
-    async def error(self, text, extra=None, tags=None, error=None, depth=None):
+    async def error(self, text, extra=None, tags=None, error=None):
         """ Error
         An unhandled error occurred
         """
@@ -190,9 +205,9 @@ class Report():
         )
 
         logger_err.error("%s  %s", SYMBOLS[3], content)
-        await self._report(text, 3, extra, tags, depth)
+        await self._report(text, 3, extra, tags, error)
 
-    async def critical(self, text, extra=None, tags=None, error=None, depth=None):
+    async def critical(self, text, extra=None, tags=None, error=None):
         """ Critical
         An error occurred that affects the operation of the service
         """
@@ -207,22 +222,22 @@ class Report():
         )
 
         logger_err.critical("%s  %s", SYMBOLS[4], content)
-        await self._report(text, 4, extra, tags, depth)
+        await self._report(text, 4, extra, tags, error)
 
-    async def important(self, text, extra=None, tags=None, depth=None):
+    async def important(self, text, extra=None, tags=None):
         """ Important
         Trigger on tracked user action was fired
         """
 
         extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[5], text, json.dumps(extra))
-        await self._report(text, 5, extra, tags, depth)
+        await self._report(text, 5, extra, tags)
 
-    async def request(self, text, extra=None, tags=None, depth=None):
+    async def request(self, text, extra=None, tags=None):
         """ Request
         The user made a request, the intervention of administrators is necessary
         """
 
         extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[6], text, json.dumps(extra))
-        await self._report(text, 6, extra, tags, depth)
+        await self._report(text, 6, extra, tags)
