@@ -3,6 +3,10 @@ import pytest
 from . import report
 
 
+async def nested():
+    await report.critical("test nested", depth=3)
+
+
 @pytest.mark.asyncio
 async def test_all():
     # All types
@@ -33,3 +37,6 @@ async def test_all():
 
     # Special symbols
     await report.request("'\"_1")
+
+    # Change traceback
+    await nested()

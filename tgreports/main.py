@@ -62,7 +62,7 @@ class Report():
         self.bug_chat = bug_chat
 
     # pylint: disable=too-many-branches
-    async def _report(self, text, type_=1, extra=None, tags=None):
+    async def _report(self, text, type_=1, extra=None, tags=None, depth=None):
         """ Make report message and send """
 
         if self.mode not in ('PRE', 'PROD') and type_ == 1:
@@ -71,7 +71,10 @@ class Report():
         if not tags:
             tags = []
 
-        previous = inspect.stack()[2]
+        if depth is None:
+            depth = 2
+
+        previous = inspect.stack()[depth]
         path = previous.filename.replace('/', '.').split('.')[3:-1]
 
         if path:
@@ -147,32 +150,32 @@ class Report():
 
 
     @staticmethod
-    async def debug(text, extra=None):
+    async def debug(text, extra=None, depth=None):
         """ Debug
         Sequence of function calls, internal values
         """
 
         logger_log.debug("%s  %s  %s", SYMBOLS[0], text, dump(extra))
 
-    async def info(self, text, extra=None, tags=None):
+    async def info(self, text, extra=None, tags=None, depth=None):
         """ Info
         System logs and event journal
         """
 
         extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[1], text, json.dumps(extra))
-        await self._report(text, 1, extra, tags)
+        await self._report(text, 1, extra, tags, depth)
 
-    async def warning(self, text, extra=None, tags=None):
+    async def warning(self, text, extra=None, tags=None, depth=None):
         """ Warning
         Unexpected / strange code behavior that does not entail consequences
         """
 
         extra = dump(extra)
         logger_err.warning("%s  %s  %s", SYMBOLS[2], text, json.dumps(extra))
-        await self._report(text, 2, extra, tags)
+        await self._report(text, 2, extra, tags, depth)
 
-    async def error(self, text, extra=None, tags=None, error=None):
+    async def error(self, text, extra=None, tags=None, error=None, depth=None):
         """ Error
         An unhandled error occurred
         """
@@ -187,9 +190,9 @@ class Report():
         )
 
         logger_err.error("%s  %s", SYMBOLS[3], content)
-        await self._report(text, 3, extra, tags)
+        await self._report(text, 3, extra, tags, depth)
 
-    async def critical(self, text, extra=None, tags=None, error=None):
+    async def critical(self, text, extra=None, tags=None, error=None, depth=None):
         """ Critical
         An error occurred that affects the operation of the service
         """
@@ -204,22 +207,22 @@ class Report():
         )
 
         logger_err.critical("%s  %s", SYMBOLS[4], content)
-        await self._report(text, 4, extra, tags)
+        await self._report(text, 4, extra, tags, depth)
 
-    async def important(self, text, extra=None, tags=None):
+    async def important(self, text, extra=None, tags=None, depth=None):
         """ Important
         Trigger on tracked user action was fired
         """
 
         extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[5], text, json.dumps(extra))
-        await self._report(text, 5, extra, tags)
+        await self._report(text, 5, extra, tags, depth)
 
-    async def request(self, text, extra=None, tags=None):
+    async def request(self, text, extra=None, tags=None, depth=None):
         """ Request
         The user made a request, the intervention of administrators is necessary
         """
 
         extra = dump(extra)
         logger_log.info("%s  %s  %s", SYMBOLS[6], text, json.dumps(extra))
-        await self._report(text, 6, extra, tags)
+        await self._report(text, 6, extra, tags, depth)
