@@ -61,11 +61,22 @@ class Report():
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     async def _report(
         self, text, type_=1, extra=None, tags=None, error=None,
     ):
         """ Make report message and send """
+
+        without_traceback = type_ in (1, 5, 6)
+
+        if isinstance(extra, dict):
+            if extra.get('name') == 'Error':
+                type_ = 3
+                del extra['name']
+
+            if extra.get('title') == 'Error':
+                type_ = 3
+                del extra['title']
 
         if self.mode not in ('PRE', 'PROD') and type_ == 1:
             return
@@ -73,7 +84,7 @@ class Report():
         if not tags:
             tags = []
 
-        if type_ in (1, 5, 6):
+        if without_traceback:
             filename = None
             lineno = None
             function = None

@@ -43,3 +43,9 @@ async def test_all():
         nested()
     except Exception as e:
         await report.critical("test", error=e)
+
+    # Convert info report to error report
+    await report.info("test", {
+        'name': "Error",
+        'data': "TypeError: Cannot read property 'forEach' of undefined",
+    })
