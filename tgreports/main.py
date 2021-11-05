@@ -73,7 +73,12 @@ class Report():
         if not tags:
             tags = []
 
-        if error:
+        if type_ in (1, 5, 6):
+            filename = None
+            lineno = None
+            function = None
+
+        elif error:
             traces = traceback.extract_tb(error.__traceback__)[::-1]
 
             for trace in traces:
@@ -92,26 +97,33 @@ class Report():
             lineno = previous.lineno
             function = previous.function
 
-        if filename[:3] == '/./':
-            filename = filename[3:]
+        if filename:
+            if filename[:3] == '/./':
+                filename = filename[3:]
 
-        path = filename.replace('/', '.').split('.')[:-1]
+            path = filename.replace('/', '.').split('.')[:-1]
 
-        if path:
-            if path[0] == 'api':
-                path = path[1:]
+            if path:
+                if path[0] == 'api':
+                    path = path[1:]
 
-            if function and function != 'handle':
-                path.append(function)
+                if function and function != 'handle':
+                    path.append(function)
 
-            path = '\n' + '.'.join(path)
+                path = '\n' + '.'.join(path)
+
+            else:
+                path = ''
+
+            source = f"\n{filename}:{lineno}"
 
         else:
             path = ''
+            source = ''
 
         text = f"{SYMBOLS[type_]} {self.mode} {TYPES[type_]}" \
-               f"{path}" \
-               f"\n\n{text}"
+            f"{path}" \
+            f"\n\n{text}"
 
         if extra:
             if isinstance(extra, dict):
@@ -129,7 +141,7 @@ class Report():
         tags = [self.mode.lower()] + tags
 
         outro = (
-            f"\n\n{filename}:{lineno}"
+            f"\n{source}"
             f"\n#" + " #".join(tags)
         )
 
