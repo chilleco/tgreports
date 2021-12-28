@@ -1,4 +1,5 @@
 # Telegram reports
-Report logs and notifications on Telegram chat or in log files
+Report logs and notifications on Telegram chat and in log files
 
-[PyPI](https://pypi.org/project/tgreports/)
+[GitHub](https://github.com/kosyachniy/tgreports)
+ | [PyPI](https://pypi.org/project/tgreports/)

@@ -33,7 +33,7 @@ def to_json(data):
         return data
 
     try:
-        return json.dumps(data)
+        return json.dumps(data, ensure_ascii=False)
     except TypeError:
         return str(data)
 
@@ -201,7 +201,12 @@ class Report():
         """
 
         extra = dump(extra)
-        logger_log.info("%s  %s  %s", SYMBOLS[1], text, json.dumps(extra))
+        logger_log.info(
+            "%s  %s  %s",
+            SYMBOLS[1],
+            text,
+            json.dumps(extra, ensure_ascii=False),
+        )
         await self._report(text, 1, extra, tags)
 
     async def warning(self, text, extra=None, tags=None, error=None):
@@ -210,7 +215,12 @@ class Report():
         """
 
         extra = dump(extra)
-        logger_err.warning("%s  %s  %s", SYMBOLS[2], text, json.dumps(extra))
+        logger_err.warning(
+            "%s  %s  %s",
+            SYMBOLS[2],
+            text,
+            json.dumps(extra, ensure_ascii=False),
+        )
         await self._report(text, 2, extra, tags, error)
 
     async def error(self, text, extra=None, tags=None, error=None):
@@ -224,7 +234,7 @@ class Report():
                 traceback.format_exception(None, error, error.__traceback__)
             )
             if error is not None else
-            f"{text}  {json.dumps(extra)}"
+            f"{text}  {json.dumps(extra, ensure_ascii=False)}"
         )
 
         logger_err.error("%s  %s", SYMBOLS[3], content)
@@ -241,7 +251,7 @@ class Report():
                 traceback.format_exception(None, error, error.__traceback__)
             )
             if error is not None else
-            f"{text}  {json.dumps(extra)}"
+            f"{text}  {json.dumps(extra, ensure_ascii=False)}"
         )
 
         logger_err.critical("%s  %s", SYMBOLS[4], content)
@@ -253,7 +263,12 @@ class Report():
         """
 
         extra = dump(extra)
-        logger_log.info("%s  %s  %s", SYMBOLS[5], text, json.dumps(extra))
+        logger_log.info(
+            "%s  %s  %s",
+            SYMBOLS[5],
+            text,
+            json.dumps(extra, ensure_ascii=False),
+        )
         await self._report(text, 5, extra, tags)
 
     async def request(self, text, extra=None, tags=None):
@@ -262,5 +277,10 @@ class Report():
         """
 
         extra = dump(extra)
-        logger_log.info("%s  %s  %s", SYMBOLS[6], text, json.dumps(extra))
+        logger_log.info(
+            "%s  %s  %s",
+            SYMBOLS[6],
+            text,
+            json.dumps(extra, ensure_ascii=False),
+        )
         await self._report(text, 6, extra, tags)
