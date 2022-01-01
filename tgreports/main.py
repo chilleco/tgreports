@@ -195,7 +195,7 @@ class Report():
 
         logger_log.debug("%s  %s  %s", SYMBOLS[0], text, dump(extra))
 
-    async def info(self, text, extra=None, tags=None):
+    async def info(self, text, extra=None, tags=None, silent=False):
         """ Info
         System logs and event journal
         """
@@ -207,9 +207,13 @@ class Report():
             text,
             json.dumps(extra, ensure_ascii=False),
         )
-        await self._report(text, 1, extra, tags)
 
-    async def warning(self, text, extra=None, tags=None, error=None):
+        if not silent:
+            await self._report(text, 1, extra, tags)
+
+    async def warning(
+        self, text, extra=None, tags=None, error=None, silent=False,
+    ):
         """ Warning
         Unexpected / strange code behavior that does not entail consequences
         """
@@ -221,9 +225,13 @@ class Report():
             text,
             json.dumps(extra, ensure_ascii=False),
         )
-        await self._report(text, 2, extra, tags, error)
 
-    async def error(self, text, extra=None, tags=None, error=None):
+        if not silent:
+            await self._report(text, 2, extra, tags, error)
+
+    async def error(
+        self, text, extra=None, tags=None, error=None, silent=False,
+    ):
         """ Error
         An unhandled error occurred
         """
@@ -236,11 +244,14 @@ class Report():
             if error is not None else
             f"{text}  {json.dumps(extra, ensure_ascii=False)}"
         )
-
         logger_err.error("%s  %s", SYMBOLS[3], content)
-        await self._report(text, 3, extra, tags, error)
 
-    async def critical(self, text, extra=None, tags=None, error=None):
+        if not silent:
+            await self._report(text, 3, extra, tags, error)
+
+    async def critical(
+        self, text, extra=None, tags=None, error=None, silent=False,
+    ):
         """ Critical
         An error occurred that affects the operation of the service
         """
@@ -253,11 +264,12 @@ class Report():
             if error is not None else
             f"{text}  {json.dumps(extra, ensure_ascii=False)}"
         )
-
         logger_err.critical("%s  %s", SYMBOLS[4], content)
-        await self._report(text, 4, extra, tags, error)
 
-    async def important(self, text, extra=None, tags=None):
+        if not silent:
+            await self._report(text, 4, extra, tags, error)
+
+    async def important(self, text, extra=None, tags=None, silent=False):
         """ Important
         Trigger on tracked user action was fired
         """
@@ -269,9 +281,11 @@ class Report():
             text,
             json.dumps(extra, ensure_ascii=False),
         )
-        await self._report(text, 5, extra, tags)
 
-    async def request(self, text, extra=None, tags=None):
+        if not silent:
+            await self._report(text, 5, extra, tags)
+
+    async def request(self, text, extra=None, tags=None, silent=False):
         """ Request
         The user made a request, the intervention of administrators is necessary
         """
@@ -283,4 +297,6 @@ class Report():
             text,
             json.dumps(extra, ensure_ascii=False),
         )
-        await self._report(text, 6, extra, tags)
+
+        if not silent:
+            await self._report(text, 6, extra, tags)

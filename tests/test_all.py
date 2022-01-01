@@ -49,3 +49,6 @@ async def test_all():
         'name': "Error",
         'data': "TypeError: Cannot read property 'forEach' of undefined",
     })
+
+    # Save logs without notification on Telegram
+    await report.important("test", silent=True)
