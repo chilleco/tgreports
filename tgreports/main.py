@@ -57,7 +57,7 @@ class Report():
     """ Report logs and notifications on Telegram chat or in log files """
 
     def __init__(self, mode, token, bug_chat):
-        self.mode = mode
+        self.mode = mode or 'TEST'
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
 
@@ -109,6 +109,8 @@ class Report():
             function = previous.function
 
         if filename:
+            if filename[:4] == '/app':
+                filename = filename[4:]
             if filename[:3] == '/./':
                 filename = filename[3:]
 
