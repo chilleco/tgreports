@@ -7,12 +7,13 @@ import inspect
 import traceback
 import logging
 import logging.config
+from os.path import exists
 from pathlib import Path
 
 from tgio import Telegram
 
 
-SYMBOLS = ['💬', '🟢', '🟡', '🔴', '❗️', '✅', '🛎']
+SYMBOLS = ['💬', '🟢', '⚠️', '❗️', '‼️', '✅', '🛎']
 TYPES = [
     'DEBUG', 'INFO',
     'WARNING', 'ERROR', 'CRITICAL',
@@ -20,7 +21,10 @@ TYPES = [
 ]
 
 
-log_file = Path(__file__).parent / 'log.conf'
+if exists('log.conf'):
+    log_file = 'log.conf'
+else:
+    log_file = Path(__file__).parent / 'log.conf'
 logging.config.fileConfig(log_file)
 logger_err = logging.getLogger(__name__)
 logger_log = logging.getLogger('info')
