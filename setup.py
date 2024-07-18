@@ -30,7 +30,7 @@ setup(
     description="Reports and logs on Telegram",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/kosyachniy/tgreports",
+    url="https://github.com/chilleco/tgreports",
     author="Alex Poloz",
     author_email="alexypoloz@gmail.com",
     classifiers=[
@@ -52,7 +52,7 @@ setup(
         "tgreports": ["log.conf"],
     },
     project_urls={
-        "Source": "https://github.com/kosyachniy/tgreports",
+        "Source": "https://github.com/chilleco/tgreports",
     },
     license="MIT",
     include_package_data=False,

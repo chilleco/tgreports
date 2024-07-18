@@ -25,6 +25,7 @@ TYPES = [
 ]
 
 
+# pylint: disable=invalid-name
 if exists("log.conf"):
     log_file = "log.conf"
 else:
@@ -179,7 +180,7 @@ class Report:
                 try:
                     await self.tg.send(self.bug_chat, text, markup=None)
 
-                # pylint: disable=broad-except
+                # pylint: disable=broad-except,redefined-outer-name
                 except Exception as e:
                     logger_err.error(
                         "%s  Send report  %s %s %s",

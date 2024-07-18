@@ -2,13 +2,12 @@
 jobs=2
 
 [FORMAT]
-max-line-length=80
+max-line-length=88
 
 [MISCELLANEOUS]
-notes=FIXME,TODO,BUG,UGLY
+notes=BUG,UGLY # TODO,FIXME
 
 [BASIC]
-good-names=i,j,e,f,ip,id,to,rm,el,tg
 no-docstring-rgx=[(__.*__)(Type)]
 
 [DESIGN]
