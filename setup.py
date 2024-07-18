@@ -7,53 +7,53 @@ import re
 from setuptools import setup, find_packages
 
 
-with open('README.md', 'r', encoding='utf-8') as file:
+with open("README.md", "r", encoding="utf-8") as file:
     long_description = file.read()
 
 WORK_DIR = pathlib.Path(__file__).parent
 
 
 def get_version():
-    """ Get version """
+    """Get version"""
 
-    txt = (WORK_DIR / 'tgreports' / '__init__.py').read_text('utf-8')
+    txt = (WORK_DIR / "tgreports" / "__init__.py").read_text("utf-8")
 
     try:
-        return re.findall(r"^__version__ = '([^']+)'\r?$", txt, re.M)[0]
+        return re.findall(r"^__version__ = \"([^\"]+)\"\r?$", txt, re.M)[0]
     except IndexError as e:
-        raise RuntimeError('Unable to determine version') from e
+        raise RuntimeError("Unable to determine version") from e
 
 
 setup(
-    name='tgreports',
+    name="tgreports",
     version=get_version(),
-    description='Reports and logs on Telegram',
+    description="Reports and logs on Telegram",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/kosyachniy/tgreports',
-    author='Alexey Poloz',
-    author_email='alexypoloz@gmail.com',
+    long_description_content_type="text/markdown",
+    url="https://github.com/kosyachniy/tgreports",
+    author="Alex Poloz",
+    author_email="alexypoloz@gmail.com",
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Libraries :: Application Frameworks',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Operating System :: OS Independent',
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Operating System :: OS Independent",
     ],
-    keywords='reports, logs, logging, notifications, alerts, Telegram',
-    packages=find_packages(exclude=('tests',)),
-    python_requires='>=3.7, <4',
+    keywords="reports, logs, logging, notifications, alerts, Telegram",
+    packages=find_packages(exclude=("tests",)),
+    python_requires=">=3.7, <4",
     install_requires=[
-        'tgio',
+        "tgio",
     ],
     package_data={
-        'tgreports': ['log.conf'],
+        "tgreports": ["log.conf"],
     },
     project_urls={
-        'Source': 'https://github.com/kosyachniy/tgreports',
+        "Source": "https://github.com/kosyachniy/tgreports",
     },
-    license='MIT',
+    license="MIT",
     include_package_data=False,
 )

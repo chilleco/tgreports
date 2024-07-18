@@ -12,6 +12,10 @@ setup-release:
 	python3 -m venv env
 	$(PYTHON) -m pip install -r requirements.dev.txt
 
+setup-all:
+	make setup-tests
+	make setup-release
+
 test-linter-all:
 	find . -type f -name '*.py' \
 	| grep -vE 'env/' \
@@ -48,6 +52,7 @@ test:
 	make test-unit-all
 
 release:
+	make clean
 	$(PYTHON) setup.py sdist bdist_wheel
 	sudo $(PYTHON) -m twine upload dist/*
 
