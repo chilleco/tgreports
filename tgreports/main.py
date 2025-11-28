@@ -1,7 +1,7 @@
 """Telegram reporting helpers: logs to files and sends Telegram notifications.
 
-- Loads a `log.conf` from the CWD if present, otherwise falls back to the packaged
-  config.
+- Configures Loguru sinks for `.log` (DEBUG/INFO) and `.err` (WARNING+) files
+  when ``Report`` is initialized; file names are customizable.
 - Provides async helpers that both write to log files and push formatted messages
   to a Telegram chat using `tgio.Telegram`.
 """
@@ -9,11 +9,9 @@
 import json
 import inspect
 import traceback
-import logging
-import logging.config
-from os.path import exists
 from pathlib import Path
 
+from loguru import logger
 from tgio import Telegram
 
 
@@ -27,16 +25,6 @@ TYPES = [
     "IMPORTANT",
     "REQUEST",
 ]
-
-
-# pylint: disable=invalid-name
-if exists("log.conf"):
-    log_file = "log.conf"
-else:
-    log_file = Path(__file__).parent / "log.conf"
-logging.config.fileConfig(log_file)
-logger_err = logging.getLogger(__name__)
-logger_log = logging.getLogger("info")
 
 
 def to_json(data):
@@ -74,7 +62,13 @@ class Report:
     writes to file handlers, and (depending on severity/mode) sends to Telegram.
     """
 
-    def __init__(self, mode, token, bug_chat):
+    _log_sink_id = None
+    _err_sink_id = None
+    _log_path = None
+    _err_path = None
+    _log_format = "[{time:YYYY-MM-DD HH:mm:ss}] {level.name} [{thread}] - {message}"
+
+    def __init__(self, mode, token, bug_chat, log_file="app.log", err_file="app.err"):
         """Initialize a reporter.
 
         Args:
@@ -82,10 +76,50 @@ class Report:
                 messages and to gate info-level Telegram sends (only PRE/PROD).
             token: Telegram bot token.
             bug_chat: Target chat/channel id for notifications.
+            log_file: Path to the debug/info log file.
+            err_file: Path to the warning/error log file.
         """
         self.mode = mode or "TEST"
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
+
+        self._configure_logger(log_file, err_file)
+
+    @classmethod
+    def _configure_logger(cls, log_file, err_file):
+        log_path = Path(log_file).expanduser()
+        err_path = Path(err_file).expanduser()
+
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        err_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if (log_path, err_path) == (cls._log_path, cls._err_path):
+            return
+
+        if cls._log_sink_id is None and cls._err_sink_id is None:
+            try:
+                logger.remove(0)  # Drop default stderr sink to mirror file-only setup
+            except ValueError:
+                pass
+
+        for sink_id in (cls._log_sink_id, cls._err_sink_id):
+            if sink_id is not None:
+                logger.remove(sink_id)
+
+        cls._log_sink_id = logger.add(
+            log_path,
+            level="DEBUG",
+            format=cls._log_format,
+            filter=lambda record: record["level"].no < 30,  # Only DEBUG/INFO to .log
+        )
+        cls._err_sink_id = logger.add(
+            err_path,
+            level="WARNING",
+            format=cls._log_format,
+        )
+
+        cls._log_path = log_path
+        cls._err_path = err_path
 
     # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     async def _report(
@@ -196,51 +230,29 @@ class Report:
         # pylint: disable=broad-except
         except Exception as e:
             if extra:
-                logger_err.error(
-                    "%s  Send report  %s %s",
-                    SYMBOLS[3],
-                    extra,
-                    e,
-                )
+                logger.error(f"{SYMBOLS[3]}  Send report  {extra} {e}")
 
                 try:
                     await self.tg.send(self.bug_chat, text, markup=None)
 
                 # pylint: disable=broad-except,redefined-outer-name
                 except Exception as e:
-                    logger_err.error(
-                        "%s  Send report  %s %s %s",
-                        SYMBOLS[3],
-                        type_,
-                        text,
-                        e,
-                    )
+                    logger.error(f"{SYMBOLS[3]}  Send report  {type_} {text} {e}")
 
             else:
-                logger_err.error(
-                    "%s  Send report  %s %s %s",
-                    SYMBOLS[3],
-                    type_,
-                    text,
-                    e,
-                )
+                logger.error(f"{SYMBOLS[3]}  Send report  {type_} {text} {e}")
 
     @staticmethod
     async def debug(text, extra=None):
         """Debug: log to file only; never sends to Telegram."""
 
-        logger_log.debug("%s  %s  %s", SYMBOLS[0], text, dump(extra))
+        logger.debug(f"{SYMBOLS[0]}  {text}  {dump(extra)}")
 
     async def info(self, text, extra=None, tags=None, silent=False):
         """Info: system logs/event journal; Telegram only in PRE/PROD unless silent."""
 
         extra = dump(extra)
-        logger_log.info(
-            "%s  %s  %s",
-            SYMBOLS[1],
-            text,
-            json.dumps(extra, ensure_ascii=False),
-        )
+        logger.info(f"{SYMBOLS[1]}  {text}  {json.dumps(extra, ensure_ascii=False)}")
 
         if not silent:
             await self._report(text, 1, extra, tags)
@@ -256,12 +268,7 @@ class Report:
         """Warning: unexpected behavior; logs and sends with caller/traceback info."""
 
         extra = dump(extra)
-        logger_err.warning(
-            "%s  %s  %s",
-            SYMBOLS[2],
-            text,
-            json.dumps(extra, ensure_ascii=False),
-        )
+        logger.warning(f"{SYMBOLS[2]}  {text}  {json.dumps(extra, ensure_ascii=False)}")
 
         if not silent:
             await self._report(text, 2, extra, tags, error)
@@ -282,7 +289,7 @@ class Report:
             if error is not None
             else f"{text}  {json.dumps(extra, ensure_ascii=False)}"
         )
-        logger_err.error("%s  %s", SYMBOLS[3], content)
+        logger.error(f"{SYMBOLS[3]}  {content}")
 
         if not silent:
             await self._report(text, 3, extra, tags, error)
@@ -303,7 +310,7 @@ class Report:
             if error is not None
             else f"{text}  {json.dumps(extra, ensure_ascii=False)}"
         )
-        logger_err.critical("%s  %s", SYMBOLS[4], content)
+        logger.critical(f"{SYMBOLS[4]}  {content}")
 
         if not silent:
             await self._report(text, 4, extra, tags, error)
@@ -312,12 +319,7 @@ class Report:
         """Important: notable tracked user action; no traceback in message."""
 
         extra = dump(extra)
-        logger_log.info(
-            "%s  %s  %s",
-            SYMBOLS[5],
-            text,
-            json.dumps(extra, ensure_ascii=False),
-        )
+        logger.info(f"{SYMBOLS[5]}  {text}  {json.dumps(extra, ensure_ascii=False)}")
 
         if not silent:
             await self._report(text, 5, extra, tags)
@@ -326,12 +328,7 @@ class Report:
         """Request: user/Admin attention needed; no traceback in message."""
 
         extra = dump(extra)
-        logger_log.info(
-            "%s  %s  %s",
-            SYMBOLS[6],
-            text,
-            json.dumps(extra, ensure_ascii=False),
-        )
+        logger.info(f"{SYMBOLS[6]}  {text}  {json.dumps(extra, ensure_ascii=False)}")
 
         if not silent:
             await self._report(text, 6, extra, tags)

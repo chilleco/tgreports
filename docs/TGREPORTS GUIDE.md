@@ -4,7 +4,7 @@ Documentation for the `tgreports` library (Telegram logging + alerting). Copy th
 
 ## What it does
 - Provides async helpers that both write to log files and send formatted messages to a Telegram chat.
-- Uses the bundled `log.conf` unless a `log.conf` is present in the working directory (override by dropping your own file next to the app entrypoint).
+- Configures Loguru file sinks for `.log` (DEBUG/INFO) and `.err` (WARNING+) when you initialize `Report`; file names are customizable per instance.
 - Serializes extra payloads safely and drops `None` fields to keep messages compact.
 - Annotates Telegram messages with the runtime mode, severity emoji, source path/line, and hashtags for filtering.
 
@@ -12,7 +12,7 @@ Documentation for the `tgreports` library (Telegram logging + alerting). Copy th
 ```bash
 pip install tgreports
 ```
-Also install its dependency `tgio` if your environment does not resolve it automatically.
+Also install its dependencies `tgio` and `loguru` if your environment does not resolve them automatically.
 
 ## Quick start
 ```python
@@ -23,7 +23,7 @@ MODE = "DEV"            # e.g. LOCAL / TEST / DEV / PRE / PROD
 BOT_TOKEN = "123:ABC"   # Telegram bot token
 BUG_CHAT = -100111222   # Target chat/channel id
 
-report = Report(MODE, BOT_TOKEN, BUG_CHAT)
+report = Report(MODE, BOT_TOKEN, BUG_CHAT, log_file="service.log", err_file="service.err")
 
 async def main():
     await report.info("Service started")                     # Telegram only in PRE/PROD
@@ -38,7 +38,7 @@ asyncio.run(main())
 All public methods except `debug` are `async`; call them inside an event loop (`asyncio.run`, background task, or framework handler).
 
 ## API surface and behavior
-- `Report(MODE, token, bug_chat)`: create a reporter with a mode label, bot token, and target chat id.
+- `Report(MODE, token, bug_chat, log_file='app.log', err_file='app.err')`: create a reporter with a mode label, bot token, target chat id, and optional log file overrides.
 - `await report.debug(text, extra=None)`: file log only; never sent to Telegram.
 - `await report.info(text, extra=None, tags=None, silent=False)`: info-level log. **Telegram send happens only when `mode` is `PRE` or `PROD`** (anti-noise rule). Set `silent=True` to log without Telegram.
 - `await report.warning(...)`, `await report.error(...)`, `await report.critical(...)`: log + Telegram with stack traces (unless `silent=True`). Pass `error=<Exception>` to include the traceback; otherwise caller info is used.
@@ -58,16 +58,11 @@ All public methods except `debug` are `async`; call them inside an event loop (`
 - Sets and tuples inside `extra` are stringified (not JSON arrays); adjust upstream if strict JSON is required.
 
 ## Logging configuration
-- On import, `logging.config.fileConfig` loads `log.conf` from the working directory if present; otherwise it falls back to the packaged `tgreports/log.conf`.
-- Default destinations: `app.log` receives `DEBUG+`, `app.err` receives `WARNING+`, both opened in append mode (no size-based rotation configured).
-- To change paths, rotation, or formats, supply your own `log.conf` beside the running process:
-  ```ini
-  [handler_logfile]
-  class=handlers.RotatingFileHandler
-  level=DEBUG
-  args=('/var/log/myapp.log', 'a', 10_000_000, 5)
-  formatter=logfileformatter
-  ```
+- Uses [Loguru](https://github.com/Delgan/loguru) instead of `logging.config`.
+- Defaults: `app.log` captures DEBUG/INFO, `app.err` captures WARNING+, both append-only with format `[{time:YYYY-MM-DD HH:mm:ss}] {level.name} [{thread}] - {message}`.
+- Override file locations per instance via `Report(..., log_file="path/to/app.log", err_file="path/to/app.err")`; parent directories are created automatically if missing.
+- The `.log` sink ignores WARNING+ to mirror the previous split between info and error outputs.
+- The default Loguru stderr sink is removed on first use so the package writes to files only unless you add your own sinks.
 
 ## Patterns and caveats
 - Keep a single `Report` instance per service/process and import it where needed; avoids repeated Telegram auth setup.

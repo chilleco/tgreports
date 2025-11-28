@@ -47,10 +47,8 @@ setup(
     python_requires=">=3.7, <4",
     install_requires=[
         "tgio",
+        "loguru>=0.7,<1",
     ],
-    package_data={
-        "tgreports": ["log.conf"],
-    },
     project_urls={
         "Source": "https://github.com/chilleco/tgreports",
     },
