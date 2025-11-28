@@ -1,6 +1,4 @@
-"""
-Initializing the Python package
-"""
+"""Public entrypoint for the tgreports package."""
 
 from .main import Report
 

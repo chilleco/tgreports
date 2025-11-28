@@ -1,5 +1,9 @@
-"""
-Reports functionality
+"""Telegram reporting helpers: logs to files and sends Telegram notifications.
+
+- Loads a `log.conf` from the CWD if present, otherwise falls back to the packaged
+  config.
+- Provides async helpers that both write to log files and push formatted messages
+  to a Telegram chat using `tgio.Telegram`.
 """
 
 import json
@@ -36,7 +40,7 @@ logger_log = logging.getLogger("info")
 
 
 def to_json(data):
-    """Convert any type to json serializable object"""
+    """Convert any type to a JSON-serializable string; fall back to ``str``."""
 
     if isinstance(data, str):
         return data
@@ -48,7 +52,11 @@ def to_json(data):
 
 
 def dump(data):
-    """json.dumps() with errors handler"""
+    """Normalize extra payloads for logging/Telegram messages.
+
+    Drops keys with ``None`` values when given a dict, JSON-encodes values when
+    possible, otherwise stringifies them.
+    """
 
     if data is None:
         return None
@@ -60,9 +68,21 @@ def dump(data):
 
 
 class Report:
-    """Report logs and notifications on Telegram chat or in log files"""
+    """Bridge between Python logging and Telegram alerts.
+
+    Creates formatted messages with mode, severity emoji, source info, and tags,
+    writes to file handlers, and (depending on severity/mode) sends to Telegram.
+    """
 
     def __init__(self, mode, token, bug_chat):
+        """Initialize a reporter.
+
+        Args:
+            mode: Environment label (e.g., LOCAL/TEST/DEV/PRE/PROD) used in
+                messages and to gate info-level Telegram sends (only PRE/PROD).
+            token: Telegram bot token.
+            bug_chat: Target chat/channel id for notifications.
+        """
         self.mode = mode or "TEST"
         self.tg = Telegram(token)
         self.bug_chat = bug_chat
@@ -76,7 +96,13 @@ class Report:
         tags=None,
         error=None,
     ):
-        """Make report message and send"""
+        """Build and send a Telegram message based on severity and context.
+
+        Adds mode/severity prefix, source path/line, dotted call path, extra
+        payload, and hashtags. Handles traceback extraction when ``error`` is
+        provided, and promotes info messages with ``extra`` name/title "Error"
+        to error severity.
+        """
 
         without_traceback = type_ in (1, 5, 6)
 
@@ -201,16 +227,12 @@ class Report:
 
     @staticmethod
     async def debug(text, extra=None):
-        """Debug
-        Sequence of function calls, internal values
-        """
+        """Debug: log to file only; never sends to Telegram."""
 
         logger_log.debug("%s  %s  %s", SYMBOLS[0], text, dump(extra))
 
     async def info(self, text, extra=None, tags=None, silent=False):
-        """Info
-        System logs and event journal
-        """
+        """Info: system logs/event journal; Telegram only in PRE/PROD unless silent."""
 
         extra = dump(extra)
         logger_log.info(
@@ -231,9 +253,7 @@ class Report:
         error=None,
         silent=False,
     ):
-        """Warning
-        Unexpected / strange code behavior that does not entail consequences
-        """
+        """Warning: unexpected behavior; logs and sends with caller/traceback info."""
 
         extra = dump(extra)
         logger_err.warning(
@@ -254,9 +274,7 @@ class Report:
         error=None,
         silent=False,
     ):
-        """Error
-        An unhandled error occurred
-        """
+        """Error: unhandled failure; logs and sends with traceback if provided."""
 
         extra = dump(extra)
         content = (
@@ -277,9 +295,7 @@ class Report:
         error=None,
         silent=False,
     ):
-        """Critical
-        An error occurred that affects the operation of the service
-        """
+        """Critical: service-affecting error; logs and sends with traceback if provided."""
 
         extra = dump(extra)
         content = (
@@ -293,9 +309,7 @@ class Report:
             await self._report(text, 4, extra, tags, error)
 
     async def important(self, text, extra=None, tags=None, silent=False):
-        """Important
-        Trigger on tracked user action was fired
-        """
+        """Important: notable tracked user action; no traceback in message."""
 
         extra = dump(extra)
         logger_log.info(
@@ -309,9 +323,7 @@ class Report:
             await self._report(text, 5, extra, tags)
 
     async def request(self, text, extra=None, tags=None, silent=False):
-        """Request
-        The user made a request, the intervention of administrators is necessary
-        """
+        """Request: user/Admin attention needed; no traceback in message."""
 
         extra = dump(extra)
         logger_log.info(
