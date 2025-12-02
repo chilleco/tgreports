@@ -3,7 +3,7 @@
 from .main import Report
 
 
-__version__ = "0.17"
+__version__ = "0.19"
 
 __all__ = (
     "__version__",

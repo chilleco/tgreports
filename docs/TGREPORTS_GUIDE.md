@@ -13,6 +13,8 @@ Documentation for the `tgreports` library (Telegram logging + alerting). Copy th
 pip install tgreports
 ```
 Also install its dependencies `tgio` and `loguru` if your environment does not resolve them automatically.
+Python 3.8+ is supported; use Python 3.10+ if you plan to run the project's linting/tests with the latest toolchain.
+For local development of this package, install dev extras: `pip install -e ".[dev]"`.
 
 ## Quick start
 ```python
